@@ -212,10 +212,10 @@ def render(group: str) -> None:
     st.markdown(f"<p class='tagline'>{cfg['tagline']}</p>", unsafe_allow_html=True)
     st.divider()
 
-    with st.expander("🧰 The columns this group uses — and what they mean", icon="🗂️"):
+    with st.expander("🧰 Columns used by this group", icon="🗂️"):
         st.markdown(mod.COLUMNS)
 
-    st.markdown("## The rules — the quick version first")
+    st.markdown("## The rules — simplified")
     for i, r in enumerate(mod.RULES, 1):
         st.markdown(
             f"<div class='rulecard'><div class='rulenum'>Rule {i}</div>"
@@ -224,7 +224,7 @@ def render(group: str) -> None:
             f"<p class='analogy'><b>Analogy ·</b> {_esc(r['analogy'])}</p></div>",
             unsafe_allow_html=True,
         )
-        with st.expander("🔬 The technical squeeze — numbers, controls, how it was proven"):
+        with st.expander("🔬 Technical detail — measurements, controls, and proof"):
             st.markdown(r["tech"])
 
     st.markdown(f"<div class='verdict'>{mod.PATTERN}</div>", unsafe_allow_html=True)
@@ -234,13 +234,13 @@ def render(group: str) -> None:
     for png, point in cfg["charts"]:
         st.image(d / png, width="stretch")
         st.markdown(
-            f"<div class='chartnote'><b>What this shows ·</b> {point}</div>",
+            f"<div class='chartnote'><b>What this chart shows</b>{point}</div>",
             unsafe_allow_html=True,
         )
 
-    with st.expander("🗣️ Words used on this page (hop, step, dex, dial…)", icon="📖"):
+    with st.expander("📖 Terminology used on this page", icon="🗣️"):
         st.markdown(mod.GLOSSARY)
 
     st.divider()
-    with st.expander("📓 Full write-up — rules, dead ends, proof rows from the raw file", icon="🗃️"):
+    with st.expander("📓 Complete write-up — rules, negative results, and proof rows from the raw data", icon="🗃️"):
         st.markdown((d / "README.md").read_text(encoding="utf-8"), unsafe_allow_html=True)

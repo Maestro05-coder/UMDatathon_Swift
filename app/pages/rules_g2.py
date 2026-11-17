@@ -8,7 +8,7 @@ COLUMNS = """
 | `BIC8_PATH` | the bank route, `;`-separated | first bank = sender, last bank = receiver |
 | `ORDERING_BIC8` / `BENEFICIARY_BIC8` | the sender/receiver bank columns | used as a check (they're ~5% wrong — g5 Rule 5) |
 
-That's it. No time, no parties, no anomaly labels — those belong to g1, g7, g8.
+No time, parties, or anomaly labels — those belong to g1, g7 and g8.
 """
 
 RULES = [
@@ -131,7 +131,7 @@ the currency rides along (see g3's ladder).
 ]
 
 PATTERN = (
-    "The one pattern behind all five — the same three-step move every time: pick the "
+    "The common thread — the same three-step move every time: pick the "
     "column that should cause the effect (sender bank / currency / amount); group all "
     "10M rows by it and count; compare against the baseline that would appear if "
     "nothing were going on (19% = chance mixing, 0.99% = round numbers by chance). If "

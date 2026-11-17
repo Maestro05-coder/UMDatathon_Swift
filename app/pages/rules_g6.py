@@ -127,7 +127,7 @@ share varies only 8.6–13.9% across middle banks (base 11.3%).
 ]
 
 PATTERN = (
-    "The one pattern behind all six: regress toward the fair comparison. Whenever a "
+    "The common thread: regress toward the fair comparison. Whenever a "
     "group looks different (Covered looks slow), don't accept the raw number — re-run "
     "the comparison with everything else held fixed (corridor, then corridor + middle "
     "bank) and watch the gap walk down to nothing. And when a mechanism is absent "

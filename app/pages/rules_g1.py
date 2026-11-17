@@ -8,7 +8,7 @@ COLUMNS = """
 | `ANOMALY_TYPE` | anomaly label or empty | only clean rows are used |
 | `half` | a built-in 50/50 row split | check: recover every clock twice, independently |
 
-That's it. No currency, no amounts, no party text — those belong to g2, g3 and g7.
+No currency, amounts, or party text — those belong to g2, g3 and g7.
 """
 
 RULES = [
@@ -107,7 +107,7 @@ peak.
 ]
 
 PATTERN = (
-    "The one pattern behind all four: take the column that should cause the rhythm "
+    "The common thread: take the column that should cause the rhythm "
     "(the sender's country), group all 10M rows by it, and read the day twice — once "
     "on the UTC clock, once on the country's own clock. A real local rhythm shows up "
     "as a huge correlation jump (−0.02 → +0.99); and if the generator used a lookup "

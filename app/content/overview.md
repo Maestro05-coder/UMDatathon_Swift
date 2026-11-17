@@ -53,7 +53,7 @@ Every group page below follows the same shape: the columns it uses, the rules an
 how each was squeezed out, dead ends included, then the charts, then the full
 write-up with proof rows straight from the file.
 
-## Words the whole app uses
+## Terminology used across the app
 
 - **BIC8** — the 8-character bank id (e.g. `0309CHZ0`). Its characters 5–6 are the
   bank's country code.

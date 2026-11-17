@@ -134,7 +134,7 @@ confidence — an honest open question.
 ]
 
 PATTERN = (
-    "The one pattern behind all seven: g5's specialty is *identity* rules. Compare two "
+    "The common thread: g5's specialty is *identity* rules. Compare two "
     "columns that should be redundant (type vs count, dots vs flag) and check all 10M "
     "rows for a single exception — zero exceptions = a rule. The same comparing-habits "
     "move then grades the harder cases: prediction with a hold-out set (99.91%), a "

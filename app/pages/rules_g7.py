@@ -118,10 +118,10 @@ never on text style (consistent with g8).
 """,
     ),
     dict(
-        name="The dead ends, written down",
+        name="Negative results — checked and rejected",
         quick=(
-            "Three tempting features are worthless: beneficiary addresses, non-IBAN "
-            "prefixes, and 'anomaly-specific wording'."
+            "Three tempting features carry no signal: beneficiary addresses, non-IBAN "
+            "account prefixes, and 'anomaly-specific wording'."
         ),
         analogy=(
             "red herrings labelled as such, so nobody fishes there again."
@@ -136,7 +136,7 @@ never on text style (consistent with g8).
 ]
 
 PATTERN = (
-    "The one pattern behind all six: start from a suspiciously uniform column (every "
+    "The common thread: start from a suspiciously uniform column (every "
     "account is `_FAKE_`), split it into sub-kinds (IBAN-shaped vs random), and check "
     "each kind against ground truth (the bank country). Kinds that match 100% are "
     "rules; strings that fail to match anything are decoration — and decoration that "

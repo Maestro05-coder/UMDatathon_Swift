@@ -27,9 +27,9 @@ RULES = [
     dict(
         name="FAT_FINGER: an honest amount with the decimal point moved — and the shift varies per row",
         quick=(
-            "A typo, not a heist: someone's ordinary payment got ×10, ×100 or ×1,000. "
-            "Divide back down and it lands inside the sender's normal range far more "
-            "often than chance."
+            "The recorded amount is the sender's ordinary amount multiplied by a power "
+            "of ten; dividing it back down lands inside the sender's normal range far "
+            "more often than chance would allow."
         ),
         analogy=(
             "entering '1,159' as '115,900' because one zero was one too many — the "
@@ -160,7 +160,7 @@ it a mechanism, it lives outside the payment fields.
 ]
 
 PATTERN = (
-    "The one pattern behind all six: compute one candidate statistic per label (gap, "
+    "The common thread: compute one candidate statistic per label (gap, "
     "rescue rate, first-contact rate) on the labelled rows AND on the clean rows, "
     "holding everything else as fixed as possible (same sender, same pair, same size "
     "band). If the label's number sits far outside the clean number, the mechanism is "

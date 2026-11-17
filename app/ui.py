@@ -78,12 +78,17 @@ p { margin: .6em 0; }
 .analogy b { color: var(--ledger); font-style: normal; }
 
 .chartnote {
-  font-size: .92rem; color: var(--lead); line-height: 1.55;
-  background: rgba(61,90,140,.14);
-  border: 1px solid var(--line); border-radius: 8px;
-  padding: .65em 1em; margin: .55em 0 2.6em;
+  font-size: 1.03rem; color: var(--ink); line-height: 1.7;
+  background: rgba(61,90,140,.20);
+  border: 1px solid #2E3D5C; border-left: 4px solid var(--ledger);
+  border-radius: 10px;
+  padding: 1.15em 1.5em; margin: .9em 0 3em;
 }
-.chartnote b { color: var(--ledger); font-weight: 600; }
+.chartnote b {
+  color: var(--ledger); font-weight: 600; font-size: .8em;
+  text-transform: uppercase; letter-spacing: .09em;
+  display: block; margin-bottom: .35em;
+}
 
 /* --- tables ----------------------------------------------------------- */
 table { border-collapse: collapse; width: auto !important; }

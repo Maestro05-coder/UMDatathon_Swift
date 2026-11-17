@@ -96,10 +96,11 @@ dex** is the bank's own property, not noise.
 """,
     ),
     dict(
-        name="The rest is census, not rule — and here's what died",
+        name="Censuses describe the sample, not the mechanism — and the hypotheses that failed",
         quick=(
-            "How many banks, corridors and intermediaries exist is a fact about this "
-            "draw, not a mechanism — and three tempting stories died on inspection."
+            "Bank, corridor and intermediary counts are facts about this dataset rather "
+            "than generator rules — and three plausible stories were rejected on "
+            "inspection."
         ),
         analogy=(
             "a phone book tells you how many plumbers a town has — not why; and some "
@@ -118,7 +119,7 @@ dex** is the bank's own property, not noise.
 | corridors | **24,017** sender→beneficiary pairs; top = domestic US→US (395,503) |
 | reciprocity | \|n_AB − n_BA\| / (n_AB + n_BA) median **0.114** — flows are *not* balanced |
 
-**Dead ends (checked, no rule):** char 7 as a bank identity (25 letters for 8,727
+**Hypotheses tested and rejected:** char 7 as a bank identity (25 letters for 8,727
 banks); char 8 (constant `'0'`); corridor reciprocity balancing; bank pool size as
 a pure function of traffic.
 """,
@@ -126,7 +127,7 @@ a pure function of traffic.
 ]
 
 PATTERN = (
-    "The one pattern behind all of it: unpack, then hold fixed. First decompose the id "
+    "The common thread: unpack, then hold fixed. First decompose the id "
     "into slots and count exceptions — zero exceptions in 25.8M appearances means a "
     "rule, not a habit. Then, for the amount question, hold the country fixed to "
     "isolate the type dial, and hold the type fixed to keep the country ladder. A dial "

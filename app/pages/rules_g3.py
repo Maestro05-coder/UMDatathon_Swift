@@ -11,7 +11,7 @@ COLUMNS = """
 | `ANOMALY_TYPE` | label or empty | clean rows only |
 | `half` | a built-in 50/50 split | check: does the ladder reproduce on independent halves? |
 
-That's it. No timestamps, no party text, no labels — g1, g7, g8's business.
+No timestamps, party text, or labels — g1, g7 and g8's territory.
 """
 
 RULES = [
@@ -152,7 +152,7 @@ generator says "make it pretty".
 ]
 
 PATTERN = (
-    "The one pattern behind all six: hold something fixed and see what survives. Hold "
+    "The common thread: hold something fixed and see what survives. Hold "
     "the two halves fixed — the centre survives (r = 0.9977). Hold the corridor fixed — "
     "the centre survives (r = 0.986). Hold the corridor fixed on the conversion effect — "
     "it dies. Hold the country fixed on roundness — the currency label wins. Rules that "
