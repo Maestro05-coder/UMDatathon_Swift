@@ -20,7 +20,6 @@ CSS = """
 .stApp {
   background-color: var(--bg);
   background-image:
-    repeating-linear-gradient(0deg, transparent 0 37px, rgba(93,140,220,.05) 37px 38px),
     radial-gradient(1100px 520px at 82% -10%, rgba(61,90,140,.38), transparent 62%);
   color: var(--ink);
 }
