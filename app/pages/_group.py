@@ -1,20 +1,23 @@
 """Shared renderer for the eight group pages.
 
-Each page file just calls render("<gN>"); everything below is config:
-folder name, one-line tagline (the headline rule) and the chart list with
-one-line captions. The simplified explainer lives in content/<folder>/explainer.md,
-the full analysis write-up in content/<folder>/README.md (rendered in an expander).
+Each page calls render("<group>"). Layout: title + tagline, the columns the
+group uses (in an expander), then the rules — each as a quick-take card with a
+simple analogy, with the full technical squeeze inside an expandable block —
+then the one-pattern verdict, the charts each followed by its "what this shows"
+note, and finally glossary + full write-up expanders.
+
+Rule content lives in rules_<group>.py modules next to this file.
 """
+import importlib
 import sys
 from pathlib import Path
 
 import streamlit as st
 
 HERE = Path(__file__).parent
-if str(HERE) not in sys.path:
-    sys.path.insert(0, str(HERE))
-if str(HERE.parent) not in sys.path:
-    sys.path.insert(0, str(HERE.parent))
+for p in (str(HERE), str(HERE.parent)):
+    if p not in sys.path:
+        sys.path.insert(0, p)
 
 from ui import apply_theme  # noqa: E402
 
@@ -192,26 +195,52 @@ GROUPS = {
 }
 
 
+def _esc(md: str) -> str:
+    """Markdown inside HTML block elements isn't parsed by st.markdown, so rule
+    cards avoid markup; tech text is rendered as plain markdown separately."""
+    return md
+
+
 def render(group: str) -> None:
     cfg = GROUPS[group]
+    mod = importlib.import_module(f"rules_{group}")
     apply_theme()
     d = CONTENT / cfg["folder"]
 
-    st.markdown(
-        f"<p class='kicker'>Group {group} · findings</p>",
-        unsafe_allow_html=True,
-    )
+    st.markdown(f"<p class='kicker'>Group {group} · findings</p>", unsafe_allow_html=True)
     st.title(cfg["title"])
     st.markdown(f"<p class='tagline'>{cfg['tagline']}</p>", unsafe_allow_html=True)
     st.divider()
 
-    st.markdown((d / "explainer.md").read_text(encoding="utf-8"), unsafe_allow_html=True)
+    with st.expander("🧰 The columns this group uses — and what they mean", icon="🗂️"):
+        st.markdown(mod.COLUMNS)
+
+    st.markdown("## The rules — the quick version first")
+    for i, r in enumerate(mod.RULES, 1):
+        st.markdown(
+            f"<div class='rulecard'><div class='rulenum'>Rule {i}</div>"
+            f"<h3>{_esc(r['name'])}</h3>"
+            f"<p>{_esc(r['quick'])}</p>"
+            f"<p class='analogy'><b>Analogy ·</b> {_esc(r['analogy'])}</p></div>",
+            unsafe_allow_html=True,
+        )
+        with st.expander("🔬 The technical squeeze — numbers, controls, how it was proven"):
+            st.markdown(r["tech"])
+
+    st.markdown(f"<div class='verdict'>{mod.PATTERN}</div>", unsafe_allow_html=True)
 
     st.divider()
     st.markdown("## The charts")
-    for png, cap in cfg["charts"]:
-        st.image(d / png, caption=cap, width="stretch")
+    for png, point in cfg["charts"]:
+        st.image(d / png, width="stretch")
+        st.markdown(
+            f"<div class='chartnote'><b>What this shows ·</b> {point}</div>",
+            unsafe_allow_html=True,
+        )
+
+    with st.expander("🗣️ Words used on this page (hop, step, dex, dial…)", icon="📖"):
+        st.markdown(mod.GLOSSARY)
 
     st.divider()
-    with st.expander("📓 Full write-up — rules, dead ends, proof rows from the raw file"):
+    with st.expander("📓 Full write-up — rules, dead ends, proof rows from the raw file", icon="🗃️"):
         st.markdown((d / "README.md").read_text(encoding="utf-8"), unsafe_allow_html=True)

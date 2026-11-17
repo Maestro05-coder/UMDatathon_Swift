@@ -24,8 +24,15 @@ documented dead ends are kept in the write-ups on purpose.
 | g8 · anomalies | FAT_FINGER = honest × 10^k, k varying; five other labels squeezed against clean baselines |
 
 `app/content/overview.md` has the dataset spec, the column dictionary and the
-method; each group page has a plain-language explainer, the charts, and the full
-write-up (rules, dead ends, proof rows) in an expander.
+method. Each group page follows the same rhythm:
+
+1. the columns the group uses (compact table),
+2. the rules — each as a **quick take with a plain analogy**, with the full
+   technical proof (numbers, controls, dead ends) in an expandable block,
+3. the one pattern behind the group's rules,
+4. the charts, each followed by a "what this shows" note,
+5. a glossary of the group's own terms (hop, step, dex, dial, decoy…),
+6. the complete write-up with proof rows straight from the file.
 
 ## Run it locally
 
