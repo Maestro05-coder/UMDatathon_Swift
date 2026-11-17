@@ -1,4 +1,4 @@
-# Rule content for the g1 · Time page: COLUMNS, RULES (quick + analogy + tech), PATTERN, GLOSSARY.
+# Rule content for the g1 · Time page: COLUMNS, RULES, FACTS, DECODERS, DEAD_ENDS, PATTERN, GLOSSARY.
 
 COLUMNS = """
 | column | what it is | how g1 uses it |
@@ -16,11 +16,13 @@ RULES = [
         name="Every country runs on its own whole-hour clock, cut from one shared template",
         quick=(
             "All 10M payments follow one single busy-day rhythm; each country just plays "
-            "that rhythm shifted by a whole number of hours."
+            "that rhythm shifted by a whole number of hours. It is a working-day template "
+            "— weekends are nearly closed."
         ),
         analogy=(
             "a café chain where every branch opens at '6am local' — same routine everywhere, "
-            "and branches differ only by whole-hour clock offsets."
+            "and branches differ only by whole-hour clock offsets; and almost none of them "
+            "open weekends."
         ),
         tech="""
 Plot payments by UTC hour and countries don't line up at all — average curve
@@ -37,6 +39,10 @@ all 113 countries — `+6 h` for 28 countries, `+7 h` for 15, `+1 h` for 10, `+8
 for 9, `+5 h` for 9, `0 h` for 8, `−11 h` for 8, and eleven more values. The
 offset table itself is charted as `g1_6_offset_table.png` — a generator lookup
 from country to clock, not a measurement of real-world time zones.
+
+The template is a working day: weekdays each carry 17.05–18.34% of payments,
+Saturday **4.35%** and Sunday **6.84%** — weekend **11.18%** overall vs 28.6% if
+all seven days were equal.
 """,
     ),
     dict(
@@ -90,21 +96,40 @@ flat-topped peak — while their 24-hour curves still correlate ≥ 0.858 (media
 scatter; an integer lookup produces exactly ±1 h ties.
 """,
     ),
-    dict(
-        name="It's a working-day template: weekends are nearly closed",
-        quick=(
-            "Each weekday carries 17–18% of payments; Saturday and Sunday together only "
-            "11.2%, versus 28.6% if all seven days were equal."
-        ),
-        analogy="offices that shut for the weekend.",
-        tech="""
-Weekdays each carry 17.05–18.34% of payments; Saturday **4.35%** and Sunday
-**6.84%** — weekend **11.18%** overall vs 28.6% if all days were equal. The three
-hours around the peak hold 21.43% of payments; 10 of 24 hours sit below half the
-peak.
-""",
-    ),
 ]
+
+FACTS = """
+| fact | value |
+| :--- | :---- |
+| countries analysed | 113 (each ≥5,000 clean rows) |
+| concentration | the 3 hours around the peak hold 21.43% of payments; 10 of 24 hours sit below half the peak |
+| sharpest curves | single-time-zone countries — the US curve is smeared by its several internal zones |
+"""
+
+DECODERS = """
+- `EPOCH_SECONDS` — UTC epoch seconds; hour of day = seconds mod 86,400, then
+  shifted by the country's offset for every cross-clock comparison.
+- sender country — characters 5–6 of the path's first bank (the 229-code
+  convention used file-wide; the endpoint columns are ~5% wrong, see g5).
+- `half` — a built-in 50/50 row split, used to recover each clock twice
+  independently (Rule 3).
+- offset values are generator-assigned whole hours (18 of them) — not real-world
+  time zones.
+"""
+
+DEAD_ENDS = """
+- **"The second window is a cut-off batch of different payments."** Killed by the
+  held-fixed test: across 113 countries the windows differ by +0.0058 dex median
+  amount, ±0.000 cross-border share, +0.0025 business-sender share — and only
+  1 of 113 countries moves its amount by more than 0.1 dex (Rule 2).
+- **"The clocks are fitted curves."** Killed by the split-half recovery: 90 of
+  113 countries reproduce the identical hour; the other 23 differ by exactly one
+  hour. Fitted clocks would disagree by fractions (Rule 3).
+- **Half-hour zones.** Offsets are whole hours only, so e.g. India (+5:30 in
+  reality) lands 30 minutes off — a resolution limit, not a finding.
+- **Absolute clock labels.** Offsets are relative to the busiest country; the
+  file cannot say "the peak is 15:00 local" — no outside data was used.
+"""
 
 PATTERN = (
     "The common thread: take the column that should cause the rhythm "

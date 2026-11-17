@@ -67,33 +67,11 @@ Four squeezes, each with the control that would break the rule:
 """,
     ),
     dict(
-        name="Nothing about the payment itself moves the amount",
-        quick=(
-            "Route shape, weekend, conversion count — none of it moves the typical "
-            "amount. The one apparent effect (0 conversions look bigger) dissolves once "
-            "you hold the corridor fixed."
-        ),
-        analogy=(
-            "the envelope doesn't change the letter: how many hands carry it, or which "
-            "day it's posted, is decoration."
-        ),
-        tech="""
-Median log10 amount by visible bank count: 3.563 / 3.564 / 3.565 / 3.566 / 3.566
-for 2/3/4/5/6 banks; Direct 3.563 vs Indirect 3.557 vs Covered 3.628; hidden banks
-3.564 vs 3.564; weekend 3.563 vs weekday 3.564. All flat.
-
-The one tempter — 0-conversion payments at 3.72 vs 3.54 for 1 conversion (+0.18
-dex) — is **corridor composition**: split by corridor, same-country 0-conv rows
-are 3.746 and same-country 2-conv rows 3.738 (no gap), while the cross-country
-gap (3.704 vs 3.540) is just the wealth of same-currency neighbours (EUR-zone/US
-corridors are rich).
-""",
-    ),
-    dict(
         name="USD amounts come from a nice-number pool: {1, 2, 5} × 10^k",
         quick=(
-            "Beyond just being round, USD whole-dollar amounts over-represent numbers "
-            "built from 1, 2 and 5 — $200, $5,000, $1,500 — which no other currency does."
+            "Flip the currency label to USD and amounts suddenly become whole numbers "
+            "(38.65% vs 0.99% elsewhere), over-representing values built from 1, 2 and "
+            "5 — $200, $5,000, $1,500."
         ),
         analogy=(
             "the tips drawer of a restaurant where people only ever leave $1, $2 and $5 "
@@ -103,9 +81,11 @@ corridors are rich).
 USD rows: whole dollars **38.65%**; multiples of 10/100/1,000 at 19.1%/15.6%/11.4%;
 every other currency **0.99%**/0.10%/0.01% (chance). Structure of USD integers:
 **10.7% are exactly {1,2,5}×10^k** (non-USD 0.02%); 46.4% have ≤2 significant
-figures; leading digits spike on 1 (35.0% vs Benford 30.1%) and 5 (14.1% vs 7.9%).
-The mode is uniform over the whole window (38.6–38.8% per 15-day bucket — not a
-storm event) and country-independent (g2 chart: DE-EUR 0.94% vs DE-USD 37.5%).
+figures (59.2% ≤3); leading digits spike on 1 (35.0% vs Benford 30.1%) and 5
+(14.1% vs 7.9%). The mode is uniform over the whole window (38.6–38.8% per
+15-day bucket — not a storm event) and country-independent (g2 chart: DE-EUR
+0.94% vs DE-USD 37.5%). Holding the sender country fixed, switching the currency
+label to USD turns on the nice-number mode.
 """,
     ),
     dict(
@@ -126,10 +106,10 @@ storm: base 1,159.42 stamped into 727 payments, integer multiples into more —
 (3,135 rows in that one family). Bases drift per currency (EUR ~1,100–1,220,
 CHF ~1,250–1,320, GBP ~1,200–1,325), each independently. Storm rows are otherwise
 ordinary: 42 sender countries in one storm, type mix = the currency's mix, 332
-rows → 324 distinct beneficiaries, anomaly labels at the normal rate. By currency:
-EUR 6.76% of its rows, CHF 3.61%, GBP 3.35%, SGD 1.42%, **USD 0.00%** (USD keeps
-its Rule-3 pool instead). This also explains the exotic repeated integers of
-non-USD currencies: 5,667.00 = 1,133.40×5.
+rows → 324 distinct beneficiaries, anomaly labels at the normal rate (69/282,771
+vs 0.07% base — slightly below). This also explains the exotic repeated integers
+of non-USD currencies: 5,667.00 = 1,133.40×5; 57,971.00 and 115,942.00 = ×50/×100
+of 1,159.42.
 """,
     ),
     dict(
@@ -150,6 +130,43 @@ generator says "make it pretty".
 """,
     ),
 ]
+
+FACTS = """
+| fact | value |
+| :--- | :---- |
+| clean amounts | median $3,678 · p75 $19,921 · p90 $94,879 · p99 $1.27M · min $0.01 · max $1.395B |
+| storm census | 1,145 (currency, amount, day) cells → 282,771 rows = 2.83%: EUR 6.76% of its rows, CHF 3.61%, GBP 3.35%, SGD 1.42%, CNY 0.94%, USD 0.00% |
+"""
+
+DECODERS = """
+- `USD_AMOUNT` — the amount drawn in USD terms; all currencies carry exactly 2
+  decimals. No FX conversion exists (g2 Rule 4).
+- `CURRENCY_CODE` — its only feedback into amounts: switching the label to USD
+  turns on the nice-number mode (country control: DE-EUR 0.94% vs DE-USD 37.5%).
+- sender country — characters 5–6 of the path's first bank; owns the centre dial.
+- `half` — the built-in 50/50 split behind the split-half checks (centre
+  r = 0.9977; the width never moves).
+- **corridor control** — restricting to payments whose beneficiary bank is in the
+  US (133 countries, ≥500 rows each) to prove the ladder is sender-side
+  (r = 0.986).
+"""
+
+DEAD_ENDS = """
+- **"Something about the payment moves the amount."** Every candidate is flat:
+  median log10 amount by visible bank count 3.563 / 3.564 / 3.565 / 3.566 / 3.566
+  (2–6 banks); Direct 3.563 vs Indirect 3.557 vs Covered 3.628; hidden banks
+  3.564 vs 3.564; weekend 3.563 vs weekday 3.564. The one tempter — 0 conversions
+  3.72 vs 3.54 (+0.18 dex) — is corridor composition: same-country 0-conv 3.746
+  vs same-country 2-conv 3.738 (no gap); the cross-country gap (3.704 vs 3.540)
+  is the wealth of EUR-zone/US neighbours.
+- **"Repeating amounts mean recurring relationships."** Same (sender, beneficiary,
+  amount) repeats are rare — 5,560 rows, max 13 repeats; storms, not
+  relationships, explain the repeats.
+- **Storm census threshold.** ≥100 rows/day AND ≥50% of the value's rows is
+  conservative; smaller families exist, so 2.83% is a lower bound on storm mass.
+- **Daily base dynamics.** Whether a storm's base is redrawn per day or evolves
+  continuously cannot be separated; the observed drift fits either.
+"""
 
 PATTERN = (
     "The common thread: hold something fixed and see what survives. Hold "

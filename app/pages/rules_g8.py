@@ -10,17 +10,6 @@ COLUMNS = """
 
 Everything is judged against the **clean baseline**: the same statistic over
 9.56M clean rows with comparable senders.
-
-**Label census (exact):**
-
-| label | rows | per 10k | who → whom |
-| :---- | ---: | ---: | :--- |
-| ROMANCE_SCAM | 2,476 | 247.6 | senders always C |
-| FAT_FINGER_MISTAKE | 1,940 | 194.0 | spread over all pairs |
-| CEO_SCAM | 945 | 94.5 | senders always B |
-| DUPLICATE_PAYMENT | 679 | 67.9 | spread |
-| ACCOUNT_REPLACEMENT_SCAM | 649 | 64.9 | mostly B→C |
-| CUSTOMER_RECALL | 317 | 31.7 | spread |
 """
 
 RULES = [
@@ -36,9 +25,11 @@ RULES = [
             "intended payment is still sitting behind the extra zeros."
         ),
         tech="""
-**Test 1 — far from home.** Distance from the sender's own median amount:
-fat finger median **2.283 dex (~190×)** vs clean 0.640 dex (~4.4×); 59.31% of
-fat-finger rows are ≥100× off the sender's habits (clean 3.77%).
+**Test 1 — far from home.** Distance from the sender's own median amount
+(1,843 fat-finger rows whose sender has ≥5 clean payments; clean control on all
+9,561,031 comparable rows): fat finger median **2.283 dex (~190×)** vs clean
+0.640 dex (~4.4×); p25/p75 1.352/3.295 vs 0.290/1.099; 59.31% of fat-finger rows
+are ≥100× off the sender's habits (clean 3.77%).
 
 **Test 2 — the decisive decimal-shift.** Divide by 10, 100, 1,000 and ask whether
 the row lands back inside the sender's own middle 50% of amounts (q25–q75):
@@ -50,99 +41,47 @@ the row lands back inside the sender's own middle 50% of amounts (q25–q75):
 
 Fat-finger rows are *least* at home unshifted and are rescued by ÷10–1,000 far
 more often than chance; the rescue only makes sense if the amount was shifted by
-a power of ten. It survives an even tighter control (same sender→beneficiary
-pairs: 51.2% vs 23.25%).
+a power of ten. It survives a tighter control (same sender→beneficiary pairs,
+≥3 clean payments: 250 fat-finger rows vs 1,603,808 clean — rescue 51.2% vs
+23.25%).
 
-**Test 3 — what is refuted.** (i) "one fixed comma position": the shift is a wide
-mixture (sd 2.230 dex, skew −0.479), not a spike. (ii) "the intended amount is an
-earlier real payment with the comma moved": exact 10^k matches to same-sender
-payments happen in **0.67%** of fat-finger rows — *half* the clean baseline
-(1.40%) — and 0/0/0 for same sender→beneficiary pairs. The intended amount is a
-fresh draw, then shifted. Fingerprint check: the USD whole-dollar share rises
-with size (78.0% at $100k–$1M, 98.8% at $10M+) — only USD has whole-number
-amounts to preserve. Resulting sizes: median **$260,241**, p90 $77.0M.
+**Confirming fingerprint.** A ×10^k with k ≥ 2 turns any 2-decimal amount into a
+whole number, so the whole-dollar rate should rise with size — and it does, only
+for USD (the one currency with whole-number amounts, g3): USD fat finger 78.0%
+($100k–$1M) and 98.8% ($10M+) vs clean ~38%; non-USD fat-finger rows show no
+trace (0.35–1.8%, indistinguishable from clean). Resulting sizes: median
+**$260,241**, p75 $6,442,821, p90 $77,029,306 (clean median $3,663).
 """,
     ),
     dict(
-        name="DUPLICATE: the same payment re-sent within minutes",
+        name="Every other label is a distinct mechanism",
         quick=(
-            "Someone pressed 'send' twice: an identical payment (same pair, same "
-            "amount, same currency) re-appears after about 18 minutes, not weeks."
+            "Duplicates resend within minutes, romance escalates within an hour, CEO "
+            "strikes on first contact with a huge tail, replacement pays a normal "
+            "amount to a one-off account — four fingerprints, none overlapping."
         ),
         analogy=(
-            "the double-click on 'pay now' — the same receipt shows up twice within a "
-            "coffee break."
+            "four different crimes, four different signatures: the double-clicked "
+            "'pay now', the grooming ladder, the cold-call wire, the ghost account."
         ),
         tech="""
-Gap between two identical payments (same sender account + beneficiary account +
-amount): duplicates median **1,099s (~18 min)**, p75 2,189s, max 6,940s (~2h) —
-clean repeats of the same trio take median **~14.7 days**. All 494 duplicate
-repeat-pairs are same-currency. Usable detector: a repeat-pair within 2 hours
-flags a labelled duplicate at **74% precision** (494 vs 164 clean).
+| label | mechanism | exact signature |
+| :---- | :-------- | :-------------- |
+| DUPLICATE | same payment re-sent within minutes | median gap **1,099s (~18 min)**, p75 2,189s, max 6,940s — vs **~14.7 days** for clean repeats of the same trio; all 494 repeat-pairs same-currency; a repeat-pair within 2h flags a labelled duplicate at **74% precision** (494 vs 164 clean vs 12 other) |
+| ROMANCE | 2–8 escalating payments to one beneficiary inside ~1 hour | median span 18 min (max 70 min); amount climbs **$33 → $54 → $88 → $144 → $206 → $350 → $544 → $1,925**; median $109 vs clean $3,663; senders always C (1,811 C→C, 665 C→B); INR 429 + CNY 426 of 2,476 rows — the generator picks small-scale-retail currencies |
+| CEO | first-ever contact, huge tail (B senders) | **100%** are the first payment ever between the pair (clean baseline 82%); p90 **$4.2M** vs $0.4M clean; median *lower* than clean ($15.2k vs $22.9k) — the signal is the tail |
+| ACCOUNT_REPLACEMENT | normal amount to a never-before-paid account | **649/649** go to an account the sender never paid before and never pays after; median $4.0k ~ clean $3.7k, p90 $94k; differentiator vs CEO: no tail |
+
+Sampling note: the labelled rows are a *sample* of each romance burst — only 364
+of 500 bursts sit fully in C→C (136 bursts have B beneficiaries, 665 rows), so
+burst tests must ignore type.
 """,
     ),
     dict(
-        name="ROMANCE: a fast escalating burst to one beneficiary",
+        name="CUSTOMER_RECALL: no payment-level signature (the honest negative)",
         quick=(
-            "A string of 2–8 payments within an hour, each asking for a little more "
-            "than the last, always from a retail (C) sender."
-        ),
-        analogy=(
-            "'it's just another $50' repeated every ten minutes until it isn't."
-        ),
-        tech="""
-500 bursts of **2–8 payments** (median 5), all within **~1 hour** (median span
-18 min, max 70 min). Median amount climbs by payment number: **$33 → $54 → $88 →
-$144 → $206 → $350 → $544 → $1,925**. Tiny overall (median $109 vs clean
-$3,663). Senders always C. Currency skew confirmed: INR 429 + CNY 426 of 2,476
-rows dominate, while clean C-senders are USD/EUR dominated — the generator picks
-"small-scale retail" currencies for this label. The labelled rows are a *sample*
-of each burst: only 364 of 500 bursts sit fully in C→C, so burst tests must
-ignore type.
-""",
-    ),
-    dict(
-        name="CEO: first-ever contact, huge ask",
-        quick=(
-            "The very first payment between two business parties is the scam — and "
-            "while the median is normal, the tail reaches millions."
-        ),
-        analogy=(
-            "a stranger emailing the CFO out of the blue with a wire request sized in "
-            "the millions."
-        ),
-        tech="""
-For B→B payments: **100%** of CEO scam rows are the FIRST payment ever between
-that sender/beneficiary pair (clean baseline 82%). Amounts skew large in the
-tail: p90 **$4.2M** vs $0.4M clean — the median is actually *lower* than clean
-($15.2k vs $22.9k), so the signal is the tail, not the typical size.
-""",
-    ),
-    dict(
-        name="ACCOUNT_REPLACEMENT: a normal amount to an account used once, ever",
-        quick=(
-            "The amount is completely ordinary; the tell is that the receiving account "
-            "had never been paid before and never will be again."
-        ),
-        analogy=(
-            "the invoice is normal, but the bank account it asks you to pay is a ghost "
-            "— created once, used once."
-        ),
-        tech="""
-**649/649** rows go to a beneficiary account this sender has never paid before
-and never pays after. Amounts normal: median $4.0k ~ clean $3.7k, p90 $94k.
-The classic stories die here: paying the same beneficiary NAME at a different
-account before = 11/649 (1.7%), *below* the 3.9% clean baseline; "account fresh
-anywhere in the window" = 34% vs 26% (weak); "same sender + same amount (±1%)
-previously paid to a *different* account" = 40% vs clean 39% — no signal.
-Differentiator vs CEO: no huge tail.
-""",
-    ),
-    dict(
-        name="CUSTOMER_RECALL: no payment-level signature (honest negative)",
-        quick=(
-            "Nothing about the payment itself distinguishes recalls — tested against "
-            "every hypothesis and matched the clean baseline on all of them."
+            "Nothing in the payment distinguishes a recall from a clean row — every "
+            "hypothesis was tested and matched the clean baseline."
         ),
         analogy=(
             "the envelope gives nothing away; whatever 'recall' means happened after "
@@ -158,6 +97,51 @@ it a mechanism, it lives outside the payment fields.
 """,
     ),
 ]
+
+FACTS = """
+**Label census (exact, all 10M rows):**
+
+| label | rows | per 10k | who → whom |
+| :---- | ---: | ---: | :--- |
+| ROMANCE_SCAM | 2,476 | 247.6 | senders always C (1,811 C>C, 665 C>B) |
+| FAT_FINGER_MISTAKE | 1,940 | 194.0 | spread over all four pairs |
+| CEO_SCAM | 945 | 94.5 | senders always B (683 B>C, 262 B>B) |
+| DUPLICATE_PAYMENT | 679 | 67.9 | spread |
+| ACCOUNT_REPLACEMENT_SCAM | 649 | 64.9 | mostly B→C (370) |
+| CUSTOMER_RECALL | 317 | 31.7 | spread |
+
+Total 7,006 rows = **0.07%** of the file.
+"""
+
+DECODERS = """
+- **clean baseline** — the same measurement over 9.56M clean rows with comparable
+  senders; every label is judged against it.
+- **sender's own middle 50% (q25–q75)** — the range holding half of that sender's
+  ordinary amounts; the "at home" zone for the decimal-shift test.
+- **×10^k / shift k** — moving the decimal point k places (×10, ×100, ×1,000…).
+- **burst** — a romance sequence of 2–8 escalating payments to one beneficiary,
+  all inside about an hour.
+- **first-ever contact** — the sender↔beneficiary pair has never transacted
+  before in the whole 90-day window.
+"""
+
+DEAD_ENDS = """
+- **"The intended amount was a real earlier payment with the comma moved"**
+  (fat finger) — exact integer-cent 10^k matches to same-sender payments: 13/1,940
+  (**0.67%**) vs 139,604/9,992,994 (**1.40%**) clean for ×10; 0.46% vs 0.80% for
+  ×100; 0.15% vs 0.33% for ×1,000; and **0/0/0** for the same sender→beneficiary
+  pair. The intended amount is a fresh draw, then shifted.
+- **"One fixed comma position for all fat-finger rows"** — refuted: against the
+  clean median of the same (country, type) cell the shift is a wide mixture
+  (mean 1.576 dex, sd 2.230, skew −0.479, n = 1,939), not a spike.
+- **The classic replacement stories** — same beneficiary NAME paid at a different
+  account before: 11/649 (1.7%), *below* the 3.9% clean baseline; "account fresh
+  anywhere in the window": 34% vs 26% clean (weak); "same sender + same amount
+  (±1%) previously paid to a *different* account": 259/649 (40%) vs clean 39% —
+  no signal.
+- **Recall mechanisms** — all null: 0/317 on every prior-payment pattern; fresh
+  account 23.7% ~ clean 26.3% (Rule 3 keeps the conclusion).
+"""
 
 PATTERN = (
     "The common thread: compute one candidate statistic per label (gap, "

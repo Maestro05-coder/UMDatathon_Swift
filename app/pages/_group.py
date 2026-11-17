@@ -52,7 +52,7 @@ GROUPS = {
         tagline=(
             "The currency is decided by the SENDER side (first bank 93% vs beneficiary 19%). "
             "Countries have home currencies; foreign payments lean to the receiver; "
-            "USD gets nice-number amounts; no FX-rate table exists."
+            "and no FX-rate table exists anywhere (USD nice numbers are g3's rule)."
         ),
         charts=[
             ("g2_1_currency_census.png",
@@ -90,9 +90,9 @@ GROUPS = {
         folder="g4_banks",
         title="Banks & countries — the two dials",
         tagline=(
-            "BIC8 ids follow a fixed 8-slot layout (0 exceptions in 25.8M appearances), "
-            "and business-vs-retail adds a constant +0.865 dex (7.3×) at every income "
-            "level — two separate generator dials."
+            "Bank numbers are drawn from a small shared pool — 1,075 prefixes serve "
+            "8,727 banks on a fixed 8-slot format — and business-vs-retail adds a "
+            "constant +0.865 dex (7.3×) at every income level."
         ),
         charts=[
             ("g4_7_bic8_structure.png",
@@ -201,6 +201,13 @@ def _esc(md: str) -> str:
     return md
 
 
+def _section(title: str, body) -> None:
+    """Render one of the short per-group sections (Facts / Decoders / Dead ends)."""
+    if body and body.strip():
+        st.markdown(f"## {title}")
+        st.markdown(body)
+
+
 def render(group: str) -> None:
     cfg = GROUPS[group]
     mod = importlib.import_module(f"rules_{group}")
@@ -215,7 +222,7 @@ def render(group: str) -> None:
     with st.expander("🧰 Columns used by this group", icon="🗂️"):
         st.markdown(mod.COLUMNS)
 
-    st.markdown("## The rules — simplified")
+    st.markdown("## The rules")
     for i, r in enumerate(mod.RULES, 1):
         st.markdown(
             f"<div class='rulecard'><div class='rulenum'>Rule {i}</div>"
@@ -226,6 +233,10 @@ def render(group: str) -> None:
         )
         with st.expander("🔬 Technical detail — measurements, controls, and proof"):
             st.markdown(r["tech"])
+
+    _section("Facts", getattr(mod, "FACTS", None))
+    _section("Decoders", getattr(mod, "DECODERS", None))
+    _section("Dead ends", getattr(mod, "DEAD_ENDS", None))
 
     st.markdown(f"<div class='verdict'>{mod.PATTERN}</div>", unsafe_allow_html=True)
 

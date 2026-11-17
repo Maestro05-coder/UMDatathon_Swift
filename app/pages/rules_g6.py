@@ -9,7 +9,7 @@ COLUMNS = """
 | `BIC8_PATH` contains `...` | one or more hidden banks | suspect #2: does hiding cost time? (it doesn't) |
 | `TRANSACTION_TYPE_CODE` | Direct / Indirect / Covered | suspect #3: is "Covered" slow? (it isn't — Rule 6) |
 
-No amounts, no parties — those can't move time anyway (g3 Rule 2).
+No amounts, no parties — those can't move time anyway (g3's negative result).
 """
 
 RULES = [
@@ -125,6 +125,35 @@ share varies only 8.6–13.9% across middle banks (base 11.3%).
 """,
     ),
 ]
+
+FACTS = """
+| fact | value |
+| :--- | :---- |
+| step speeds | 66% of steps < 1 min · 17% > 15 min · slowest seen 11,237s (~3 h) |
+| lopsidedness | 3-bank payments: median 80 s but p75 1,180 s |
+| fit | actual ≈ −13 s + 0.99 × predicted (steps added) |
+| Covered share stability | varies only 8.6–13.9% across middle banks (base 11.3%) |
+"""
+
+DECODERS = """
+- `TOTAL_DURATION` — seconds from first to last bank.
+- **step** — one bank-to-bank leg; a 3-bank payment has 2 steps.
+- **2-bank payment (Direct)** — the laboratory for step delays: exactly one step,
+  millions of samples per common leg.
+- **corridor** — sender country → beneficiary country pair; held fixed to make
+  comparisons fair.
+- **middle bank** — the bank(s) between the endpoints.
+"""
+
+DEAD_ENDS = """
+- **Sample restriction in Rule 1.** Only ~3% of 3–4-bank routes had both steps
+  measurable (each step must also appear as a 2-bank payment somewhere); tested
+  on common pairs, not a random sample.
+- **Bank vs pair not fully separable.** Sending vs receiving vs pair can't be
+  fully separated; the 0.87 send/receive correlation says the bank dominates.
+- **Rule 6's tightest cell count.** The 1.14× rests on 21 matched
+  (corridor, middle-bank) cells — it could wobble either way.
+"""
 
 PATTERN = (
     "The common thread: regress toward the fair comparison. Whenever a "

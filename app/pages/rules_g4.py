@@ -3,7 +3,7 @@
 COLUMNS = """
 | column | what it is | how g4 uses it |
 | :--- | :--------- | :------------- |
-| `BIC8_PATH` (every bank id in it) | the `;`-separated route | the raw material: 25.8M appearances of 8,727 banks, taken apart character by character |
+| `BIC8_PATH` (every bank id in it) | the `;`-separated route | the raw material: 25.8M appearances of 8,727 banks (layout decoded below) |
 | `ORDERING_TYPE` / `BENEFICIARY_TYPE` | B or C on each side | the second dial — does the party type move the amount? |
 | `USD_AMOUNT` | the amount | what the dials move |
 | `ANOMALY_TYPE` | label or empty | clean rows only |
@@ -14,36 +14,26 @@ themselves.
 
 RULES = [
     dict(
-        name="A bank id is a fixed 8-slot layout — zero exceptions",
+        name="Bank numbers are drawn from a small shared pool — a bank is (prefix, country)",
         quick=(
-            "Bank ids aren't random codes: every one of the 25.8M appearances is built "
-            "as 4 shared digits + country code + one house letter + a fixed '0'."
+            "8,727 banks share only 1,075 four-digit numbers, so the number alone doesn't "
+            "identify a bank — the pair (prefix, country) does. The values are drawn per "
+            "country from a pool, not counted up in a global sequence."
         ),
         analogy=(
-            "licence plates: the format is fixed by law, the numbers come from a small "
-            "shared pool per region, and the letter says which region you're from."
+            "licence plate numbers: two states can both issue '4402', so the plate is "
+            "the number *and* the state together."
         ),
-        tech="""
-```
- 0 3 0 9 | C H | Z | 0
- └─┬──┘   └┬┘   │   │
- 4-digit  country│   always '0'
- bank no.  code  house letter
-```
+        tech=r"""
+Zero exceptions across **25,815,715** appearances of **8,727** banks:
 
-Census over **25,815,715** appearances of **8,727** distinct banks:
-
-| slot | distinct values | what it can be |
-| :--- | ---: | :--- |
-| digits 1–4 | 1,075 | numeric only — **0 exceptions** |
-| chars 5–6 | 229 | country codes, used everywhere in the file |
-| char 7 | 25 | one letter, constant per country — 0 of 229 countries vary |
-| char 8 | 1 | always `'0'` — a constant can't be a check digit |
-
-The kicker: 8,727 banks share only 1,075 four-digit prefixes (range 0…1136), so
-the bank number is drawn per country from a small shared pool, not a global
-sequence — a bank is really **(prefix, country)**. The house letter ('2' in 30
-countries, M 22, B 20, S 18, P 17) identifies the country, not the bank.
+- digits 1–4: **1,075 distinct values** for 8,727 banks (range 0…1136), numeric
+  only — the prefix alone is not an identity.
+- char 7 (house letter): **25 possible values, constant within each country**
+  (0 of 229 countries vary) and reused across countries ('2' in 30 countries,
+  M 22, B 20, S 18, P 17) — it identifies the *country*, not the bank.
+- char 8: always `'0'` — the field is padded to 8 characters, not a check digit
+  (a constant cannot encode anything).
 """,
     ),
     dict(
@@ -59,7 +49,8 @@ countries, M 22, B 20, S 18, P 17) identifies the country, not the bank.
         tech="""
 Types are only ever B or C (0 A/D rows in all 10M). Holding the **country** fixed
 and comparing business senders to retail senders within it (167 countries with
-≥300 of each): median offset **+0.865 dex = 7.3×**, sd 0.100, p25–p75 +0.807…+0.917.
+≥300 of each): median offset **+0.865 dex = 7.3×**, sd 0.100, p25–p75 +0.807…+0.917,
+min +0.517 (ME) … max +1.179 (XK); 101 of 167 countries inside 0.80–0.95 dex.
 Because the effect is additive in log space, each country's retail median plotted
 against its business median sits on a **slope-1 line** displaced by a constant —
 the offset doesn't grow with wealth. Removing the type effect leaves the country
@@ -95,36 +86,54 @@ of it (corr 0.62 with the predicted type-cell median); the residual σ ≈ **0.2
 dex** is the bank's own property, not noise.
 """,
     ),
-    dict(
-        name="Censuses describe the sample, not the mechanism — and the hypotheses that failed",
-        quick=(
-            "Bank, corridor and intermediary counts are facts about this dataset rather "
-            "than generator rules — and three plausible stories were rejected on "
-            "inspection."
-        ),
-        analogy=(
-            "a phone book tells you how many plumbers a town has — not why; and some "
-            "obvious 'plumber patterns' turn out to be coincidence."
-        ),
-        tech=r"""
-**Exact censuses (descriptions, not rules):**
+]
 
+FACTS = r"""
 | fact | value |
 | :--- | :---- |
-| banks / country codes | 8,727 banks over 229 codes; 25,815,715 appearances |
-| banks per country | median 12, max **1,016 (US)**, min 1 |
-| pool size vs traffic | r = 0.94 raw — but country-specific residuals (IM: 12 banks, FI: 33) |
-| roles | 45 banks are pure intermediaries (never an endpoint); middle share 56.3% |
-| top intermediaries | `0309CHZ0` 492,743 hops; `0004IMD0` 460,652; `0085BEB0` 329,656 |
-| corridors | **24,017** sender→beneficiary pairs; top = domestic US→US (395,503) |
-| reciprocity | \|n_AB − n_BA\| / (n_AB + n_BA) median **0.114** — flows are *not* balanced |
+| bank census | 8,727 banks over 229 country codes; 25,815,715 visible appearances |
+| banks per country | median 12 · max 1,016 (US) · min 1 |
+| pool vs traffic | r = 0.94 raw, 0.83 on logs — with country-specific residuals (Isle of Man: 545k rows on 12 banks; Finland: 466k on 33) |
+| roles | every bank is an endpoint ≥ once; 45 banks are pure intermediaries; middle share 56.3% |
+| top intermediaries | `0309CHZ0` 492,743 hops · `0004IMD0` 460,652 · `0085BEB0` 329,656 |
+| corridors | 24,017 sender→beneficiary pairs; top = domestic US→US (395,503) |
+| reciprocity | \|n_AB − n_BA\| / (n_AB + n_BA) median 0.114, p90 0.326 — flows are not balanced |
+"""
 
-**Hypotheses tested and rejected:** char 7 as a bank identity (25 letters for 8,727
-banks); char 8 (constant `'0'`); corridor reciprocity balancing; bank pool size as
-a pure function of traffic.
-""",
-    ),
-]
+DECODERS = r"""
+**The 8-slot BIC8 layout** — a fixed format (0 exceptions in 25,815,715
+appearances); the *drawing* of its values is Rule 1:
+
+```
+ 0 3 0 9 | C H | Z | 0
+ └─┬──┘   └┬┘   │   │
+ 4-digit  country│   always '0'
+ bank no.  code  house letter
+```
+
+| slot | distinct values | meaning |
+| :--- | ---: | :--- |
+| digits 1–4 | 1,075 | the shared numeric pool (range 0…1136) |
+| chars 5–6 | 229 | country code, used file-wide |
+| char 7 | 25 | house letter — constant within a country, identifies the country, not the bank |
+| char 8 | 1 | always `'0'` — padding to 8 characters |
+
+- `ORDERING_TYPE` / `BENEFICIARY_TYPE` — B or C; the amount dial is Rule 2, the
+  wording-level meaning is decoded in g7.
+- chars 5–6 of any bank in the path give that bank's country — the convention
+  every group uses for country work.
+"""
+
+DEAD_ENDS = """
+- **Char 7 as a bank identity** — no: 25 letters for 8,727 banks, constant within
+  each country, reused across countries.
+- **Char 8 as a check digit** — a constant `'0'` cannot encode anything.
+- **Corridor reciprocity balancing** — the generator does not balance A→B against
+  B→A (median asymmetry 0.114, p90 0.326).
+- **Bank pool size as a pure function of traffic** — r = 0.94 is carried by size,
+  but the residual is country-specific (IM 12 banks, FI 33): the pool is a
+  per-country draw, not a rule of traffic.
+"""
 
 PATTERN = (
     "The common thread: unpack, then hold fixed. First decompose the id "
@@ -135,7 +144,8 @@ PATTERN = (
 )
 
 GLOSSARY = """
-- **BIC8** — the 8-character bank id (see Rule 1); its chars 5–6 are the country.
+- **BIC8** — the 8-character bank id (layout in Decoders); its chars 5–6 are the
+  country.
 - **house letter** — char 7 of the id; constant per country, meaningless for
   identifying a bank.
 - **dial** — a generator knob that shifts amount levels in log space,

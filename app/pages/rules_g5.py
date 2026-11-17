@@ -4,33 +4,17 @@ COLUMNS = """
 | column | what it is | how g5 uses it |
 | :--- | :--------- | :------------- |
 | `BIC8_PATH` | the full route of bank ids, `;`-separated; `...` = a bank we're not shown | the subject itself — the rule book of the route |
-| `TRANSACTION_TYPE_CODE` | Direct / Indirect / Covered | what does the type actually mean? (Rule 1) |
-| `PARTICIPANT_COUNT` | number of banks shown in the path | checked — it literally counts the path |
-| `CONTINUITY_QFLAG` | Y / N flag | matched against the path, char by char (Rule 2) |
-| `CURRENCY_CONVERSION_COUNT` | number of conversions | can we predict it from the banks alone? (Rule 4) |
-| `ORDERING_BIC8` / `BENEFICIARY_BIC8` | stated sender/receiver banks | tested against the path — wrong ~5% of the time (Rule 5) |
-| `ANOMALY_TYPE` | label or empty | used in Rule 6: do fraud labels avoid a route type? |
+| `TRANSACTION_TYPE_CODE` | Direct / Indirect / Covered | it is just the bank count — decoded below (Decoders) |
+| `PARTICIPANT_COUNT` | number of banks shown in the path | literally counts the path (Decoders) |
+| `CONTINUITY_QFLAG` | Y / N flag | matched against the path (Rule 1) |
+| `CURRENCY_CONVERSION_COUNT` | number of conversions | predicted from the banks alone (Rule 3) |
+| `ORDERING_BIC8` / `BENEFICIARY_BIC8` | stated sender/receiver banks | tested against the path — wrong ~5% of the time (Rule 4) |
+| `ANOMALY_TYPE` | label or empty | used in Rule 5: do fraud labels avoid a route type? |
 
 Amounts (g3), timing (g6) and bank identities (g4) live elsewhere.
 """
 
 RULES = [
-    dict(
-        name="The type is just the bank count — every single time",
-        quick=(
-            "Direct means exactly 2 banks, Indirect/Covered means 3 or more. The "
-            "scary-sounding type column carries no extra information."
-        ),
-        analogy=(
-            "a restaurant menu where 'small/medium/large' is literally just 'how many "
-            "scoops' — no secret third category hiding underneath."
-        ),
-        tech="""
-Direct = exactly 2 banks in `BIC8_PATH` — 6,323,280 rows, **0 exceptions**.
-Indirect or Covered = 3 or more banks. `PARTICIPANT_COUNT` simply counts the
-banks shown in the path.
-""",
-    ),
     dict(
         name="`...` in the path ⇔ QFLAG 'N': two columns, one message",
         quick=(
@@ -133,9 +117,38 @@ confidence — an honest open question.
     ),
 ]
 
+FACTS = """
+| fact | value |
+| :--- | :---- |
+| hidden-bank rows | 767,204 carry `...` — 0 exceptions against QFLAG in either direction |
+| hold-out halves | ≈4M rows each; the conversion rule scores 99.91% on both |
+| fit quality | every route length fits the 5%-per-link curve within 0.4 percentage points |
+"""
+
+DECODERS = """
+- **`TRANSACTION_TYPE_CODE` is the bank count, every single time** — Direct =
+  exactly 2 banks in `BIC8_PATH` (6,323,280 rows, 0 exceptions); Indirect/Covered
+  = 3 or more. The type carries no information beyond the count.
+- `PARTICIPANT_COUNT` — literally counts the banks shown in the path.
+- `CONTINUITY_QFLAG` — Y = path fully shown; N = contains `...` (Rule 1 makes
+  them equivalent).
+- **hop / link** — one bank-to-bank leg; a path with n banks has n−1 links.
+- **endpoint / middle bank** — first or last bank of the path / anything between.
+- **Covered** — one of the type labels; per the decoder above it just means
+  "3+ banks".
+"""
+
+DEAD_ENDS = """
+- **"Same-country corridors are Covered more" is a tendency, not a rule** — 20.7%
+  vs 10.6% cross-country; no clean rule separates Covered from Indirect (open).
+- **Why Belgium/Switzerland are over-used as middle hops** — the
+  currency-geography explanation fails (BE conversion-route share 36% vs 32%
+  baseline); real cause unknown, medium confidence (Rule 6).
+"""
+
 PATTERN = (
     "The common thread: g5's specialty is *identity* rules. Compare two "
-    "columns that should be redundant (type vs count, dots vs flag) and check all 10M "
+    "columns that should be redundant (dots vs flag) and check all 10M "
     "rows for a single exception — zero exceptions = a rule. The same comparing-habits "
     "move then grades the harder cases: prediction with a hold-out set (99.91%), a "
     "column's own error rate (5%), and whether labels change behaviour — where the "
@@ -148,5 +161,5 @@ GLOSSARY = """
   flagged by `CONTINUITY_QFLAG = N`.
 - **endpoint** — the first or last bank of the path (sender's / beneficiary's).
 - **middle bank** — any bank between the two endpoints.
-- **Covered** — one of the type labels; with Rule 1 it just means "3+ banks".
+- **Covered** — one of the type labels; with the decoder above it just means "3+ banks".
 """

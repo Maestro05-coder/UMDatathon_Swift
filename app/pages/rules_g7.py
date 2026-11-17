@@ -7,7 +7,7 @@ COLUMNS = """
 | `ORDERING_DETAILS` / `BENEFICIARY_DETAILS` | the party's profile text (name/address) | read line by line: is the geography real or decoration? |
 | `ORDERING_TOKENS` / `BENEFICIARY_TOKENS` | the generator's template of the same text | compared against DETAILS, token family by token family |
 | `BIC8_PATH` (first bank) | sender's bank → its country | the ground-truth geography that the address is checked against |
-| `ORDERING_TYPE` / `BENEFICIARY_TYPE` | B or C | decoded from the text itself (Rule 5) |
+| `ORDERING_TYPE` / `BENEFICIARY_TYPE` | B or C | decoded from the text itself (Decoders) |
 
 Amounts (g3), clock (g1) and labels (g8) live elsewhere.
 """
@@ -99,41 +99,45 @@ Bangladesh (`<post_code:BD:4> <city:BD:6> <country_name:BD:en-gb>`). Practical
 consequence: never use beneficiary address text as a geographic feature.
 """,
     ),
-    dict(
-        name="B really means business, C really means person — confirmed in the text",
-        quick=(
-            "The B/C letters aren't arbitrary: B rows are worded as companies, C rows "
-            "as people — and even anomalous rows keep the same wording."
-        ),
-        analogy=(
-            "the letterhead never lies about whether the sender is a company or a "
-            "private person."
-        ),
-        tech="""
-B rows' TOKENS contain business/company tokens **87.6%** and person-name tokens
-**0%**; C rows contain person names **90.7%** and business **0%** (both sides).
-Control: anomalous rows use the same mix (B anomalous 88.1% business, C
-anomalous 89.1% person) — the anomaly labels act on amounts/timing/accounts,
-never on text style (consistent with g8).
-""",
-    ),
-    dict(
-        name="Negative results — checked and rejected",
-        quick=(
-            "Three tempting features carry no signal: beneficiary addresses, non-IBAN "
-            "account prefixes, and 'anomaly-specific wording'."
-        ),
-        analogy=(
-            "red herrings labelled as such, so nobody fishes there again."
-        ),
-        tech="""
-- **Beneficiary address as geography** — decoy (Rule 4): 0.98% match.
-- **Prefix of the 45.6% non-IBAN accounts** — random; no country/bank signal.
-- **Anomaly-specific text styles** — none found (anomalous rows keep the same
-  templates, see Rule 5).
-""",
-    ),
 ]
+
+FACTS = """
+| account (top whales) | bank | rows | beneficiaries | median $ |
+| :--- | :--- | ---: | ---: | ---: |
+| `_FAKE_41GBP/9 1 67` | 0004IMD0 | 75,803 | 38,415 | 5,750 |
+| `_FAKE_41GBP/9 1 62` | 0004IMD0 | 49,629 | 25,357 | 5,370 |
+| `_FAKE_00E69 0N 873` | 0001MQM0 | 27,737 | 4,687 | 575 |
+| `_FAKE_.62313E9` | 0013JEH0 | 19,947 | 11,774 | 600 |
+| `_FAKE_LU35012400000000669820` | 0124LUL0 | 18,812 | 7,648 | 9,330 |
+
+Pools: 391,132 ordering accounts (avg 25.6 rows) vs 2,590,877 beneficiary
+accounts (avg 3.9); 28,889 senders with ≥50 rows carry 78.6% of all rows.
+"""
+
+DECODERS = """
+- **B = business, C = person, confirmed in the text.** B rows' TOKENS contain
+  business/company wording **87.6%** and person names **0%**; C rows contain
+  person names **90.7%** and business **0%** (both sides). Anomalous rows keep
+  the same templates (B 88.1% business, C 89.1% person) — labels never touch the
+  letterhead (consistent with g8).
+- **DETAILS / TOKENS** — the party's profile text, and the generator's template
+  of it; `<city:BD:6>` = "a 6-char city from Bangladesh".
+- **IBAN-shaped** — `_FAKE_` + 2 letters + 2 digits + digits; a fake account
+  whose country prefix is real (100.00% match, 76 prefixes, Rule 1).
+- account → bank: each ordering account belongs to exactly one bank (100% of
+  391,132); beneficiary accounts 97.6% (max 8 banks).
+"""
+
+DEAD_ENDS = """
+- **Beneficiary address as geography** — decoy: 0.98% match to the bank country;
+  the bank column carries the truth (Rule 4).
+- **Non-IBAN account prefixes (45.6%)** — random strings; no country or bank
+  signal.
+- **Anomaly-specific text styles** — none: anomalous rows keep the same B/C
+  templates (Decoders above).
+- **Short profiles.** 3.4% of rows lack a country token; mostly truncated details
+  (only 21.6% of <40-char details carry one) — a coverage note, not a signal.
+"""
 
 PATTERN = (
     "The common thread: start from a suspiciously uniform column (every "
