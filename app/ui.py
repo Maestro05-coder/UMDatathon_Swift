@@ -21,6 +21,8 @@ CSS = """
   background-color: var(--bg);
   background-image:
     radial-gradient(1100px 520px at 82% -10%, rgba(61,90,140,.38), transparent 62%);
+  background-repeat: no-repeat;
+  background-attachment: fixed;
   color: var(--ink);
 }
 
