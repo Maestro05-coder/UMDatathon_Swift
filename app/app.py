@@ -26,14 +26,15 @@ apply_theme()
 
 PAGES = [
     st.Page("pages/00_overview.py", title="Overview", icon="🏦", default=True),
-    st.Page("pages/g1.py", title="g1 · Time", icon="🕒"),
-    st.Page("pages/g2.py", title="g2 · Currency", icon="💱"),
-    st.Page("pages/g3.py", title="g3 · Amounts", icon="💵"),
-    st.Page("pages/g4.py", title="g4 · Banks & countries", icon="🏛️"),
-    st.Page("pages/g5.py", title="g5 · Routing", icon="🛤️"),
-    st.Page("pages/g6.py", title="g6 · Duration & FX", icon="⏱️"),
-    st.Page("pages/g7.py", title="g7 · Parties & text", icon="📇"),
-    st.Page("pages/g8.py", title="g8 · Anomalies", icon="🚨"),
+    st.Page("pages/shortlist.py", title="Shortlist · actual rules", icon="⭐", url_path="shortlist"),
+    st.Page("pages/g1.py", title="g1 · Time", icon="🕒", url_path="g1"),
+    st.Page("pages/g2.py", title="g2 · Currency", icon="💱", url_path="g2"),
+    st.Page("pages/g3.py", title="g3 · Amounts", icon="💵", url_path="g3"),
+    st.Page("pages/g4.py", title="g4 · Banks & countries", icon="🏛️", url_path="g4"),
+    st.Page("pages/g5.py", title="g5 · Routing", icon="🛤️", url_path="g5"),
+    st.Page("pages/g6.py", title="g6 · Duration & FX", icon="⏱️", url_path="g6"),
+    st.Page("pages/g7.py", title="g7 · Parties & text", icon="📇", url_path="g7"),
+    st.Page("pages/g8.py", title="g8 · Anomalies", icon="🚨", url_path="g8"),
 ]
 
 st.navigation(PAGES, position="sidebar").run()

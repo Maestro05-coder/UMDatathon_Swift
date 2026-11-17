@@ -47,7 +47,7 @@ streamlit run app/app.py
 app/
   app.py            entry point (multi-page navigation)
   ui.py             shared theme ("night ledger": JetBrains Mono, sharp rectangles)
-  pages/            one file per group + overview
+  pages/            overview, shortlist ("actual rules"), one file per group
   content/          per group: explainer.md (simple), README.md (full), charts
 ```
 

@@ -90,6 +90,18 @@ p { margin: .6em 0; line-height: 1.65; }
   display: block; margin-bottom: .35em;
 }
 
+.shortlist-head { display: flex; align-items: baseline; gap: .95rem; margin-top: 2.6rem; }
+.sl-num {
+  font-size: .72rem; letter-spacing: .2em; color: var(--accent);
+  font-weight: 600; flex: 0 0 auto;
+}
+.sl-title { font-size: 1.28rem; font-weight: 700; color: #EDF2FA; letter-spacing: -0.02em; }
+.sl-why { color: var(--steel); font-size: .95rem; font-style: italic; margin: .35rem 0 .2rem; }
+.sl-why b {
+  color: var(--accent); font-style: normal; font-weight: 600; font-size: .8em;
+  text-transform: uppercase; letter-spacing: .09em;
+}
+
 table { border-collapse: collapse; width: auto !important; }
 th {
   background: #1D2A42 !important; color: #CFE0F5 !important;

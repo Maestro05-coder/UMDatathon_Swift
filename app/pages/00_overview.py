@@ -37,6 +37,7 @@ st.image(
 
 st.markdown("## Jump to a group")
 grid = {
+    "⭐ Shortlist · actual rules": "pages/shortlist.py",
     "g1 · Time": "pages/g1.py",
     "g2 · Currency": "pages/g2.py",
     "g3 · Amounts": "pages/g3.py",
